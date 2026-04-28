@@ -26,17 +26,22 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/devops-psu:latest
 
-  touch-k8s-manifest:
+  update-manifests:
     needs: push_to_registry
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Insert release date
+      - name: Checkout manifests repo
+        uses: actions/checkout@v4
+        with:
+          repository: LittleAlexMen/app-manifests-devops
+          token: ${{ secrets.GH_PAT }}
+      - name: Bump release date in manifest
         run: |
-          sed -i "s/release-date: .*$/release-date: $(date +%s)/g" ./server-k8s-manifests/devops-psu.yml
-      - name: Commit manifest
+          sed -i "s/release-date: .*/release-date: $(date +%s)/" devops-psu.yml
+      - name: Commit and push changes
         run: |
-          git config --global user.name 'Release Runner'
-          git config --global user.email 'runner@users.noreply.github.com'
-          git commit -am "Release manifest update"
-          git push --force origin master:release
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add devops-psu.yml
+          git commit -m "Automated manifest update after build" || echo "No changes"
+          git push
