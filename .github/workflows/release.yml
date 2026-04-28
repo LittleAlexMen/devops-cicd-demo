@@ -25,23 +25,3 @@ jobs:
           context: ./server/
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/devops-psu:latest
-
-  update-manifests:
-    needs: push_to_registry
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout manifests repo
-        uses: actions/checkout@v4
-        with:
-          repository: LittleAlexMen/app-manifests-devops
-          token: ${{ secrets.GH_PAT }}
-      - name: Bump release date in manifest
-        run: |
-          sed -i "s/release-date: .*/release-date: $(date +%s)/" devops-psu.yml
-      - name: Commit and push changes
-        run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
-          git add devops-psu.yml
-          git commit -m "Automated manifest update after build" || echo "No changes"
-          git push
